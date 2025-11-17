@@ -83,12 +83,12 @@ This repository contains a comprehensive tutorial on performing Cox Proportional
    ```
 
 4. **Update README.md:**
-   - Replace `YOUR_USERNAME` with your GitHub username
-   - In both README.md and the notebook
+   - ✅ All references updated with username `aralap`
+   - ✅ All repository names updated to `3DG_Tutorials`
 
 5. **Push to GitHub:**
    ```bash
-   git remote add origin https://github.com/YOUR_USERNAME/3DG_Tutorial.git
+   git remote add origin https://github.com/aralap/3DG_Tutorials.git
    git push -u origin main
    ```
 
