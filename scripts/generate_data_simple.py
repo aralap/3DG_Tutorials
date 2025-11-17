@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+"""
+Simple script to generate sample survival data CSV without pandas dependency.
+"""
+
+import csv
+import random
+import math
+
+# Set random seed for reproducibility
+random.seed(42)
+
+def generate_sample_data(n_samples=500, output_file='../data/sample_survival_data.csv'):
+    """Generate synthetic survival data and save as CSV."""
+    
+    # Initialize data list with headers
+    data = [['patient_id', 'survival_time', 'event', 'age', 'gender', 'treatment', 'biomarker1', 'biomarker2']]
+    
+    for i in range(1, n_samples + 1):
+        # Generate patient ID
+        patient_id = i
+        
+        # Generate age (30-80 years)
+        age = random.randint(30, 80)
+        
+        # Generate gender (categorical)
+        gender = random.choice(['Male', 'Female'])
+        
+        # Generate treatment groups (A, B, C)
+        treatment = random.choice(['A', 'B', 'C'])
+        
+        # Generate biomarker levels (normal distribution approximation)
+        biomarker1 = round(random.gauss(50, 15), 2)
+        biomarker2 = round(random.gauss(100, 25), 2)
+        
+        # Generate survival times based on covariates
+        baseline_hazard = 0.02
+        if treatment == 'B':
+            treatment_effect = 0.5
+        elif treatment == 'A':
+            treatment_effect = 0.8
+        else:
+            treatment_effect = 1.0
+        
+        age_effect = age / 80
+        biomarker_effect = biomarker1 / 100 if biomarker1 > 0 else 0.5
+        
+        hazard_rate = baseline_hazard * treatment_effect * (1 + age_effect * 0.5) * (1 + biomarker_effect * 0.3)
+        
+        # Generate survival time (exponential distribution)
+        survival_time = random.expovariate(hazard_rate) if hazard_rate > 0 else 1825
+        
+        # Cap maximum survival time at 1825 days (5 years)
+        survival_time = min(survival_time, 1825)
+        
+        # Generate censoring (30% censoring rate)
+        censoring_time = random.uniform(365, 1825)
+        event = 1 if survival_time <= censoring_time else 0
+        survival_time_observed = survival_time if event == 1 else censoring_time
+        
+        # Round survival time
+        survival_time_observed = round(survival_time_observed, 2)
+        
+        # Add row to data
+        data.append([
+            patient_id,
+            survival_time_observed,
+            event,
+            age,
+            gender,
+            treatment,
+            biomarker1,
+            biomarker2
+        ])
+    
+    # Write to CSV file
+    with open(output_file, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerows(data)
+    
+    print(f"Sample survival data created successfully!")
+    print(f"Output file: {output_file}")
+    print(f"Shape: {n_samples} rows, 8 columns")
+    
+    # Count events
+    events = sum(row[2] for row in data[1:])
+    print(f"Events: {events}/{n_samples} ({100*events/n_samples:.1f}%)")
+    
+    # Print first few rows
+    print("\nFirst 5 rows:")
+    for i, row in enumerate(data[:6]):
+        if i == 0:
+            print(" | ".join(str(x) for x in row))
+        else:
+            print(" | ".join(str(x) for x in row))
+
+if __name__ == "__main__":
+    import os
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.join(os.path.dirname(script_dir), 'data')
+    output_file = os.path.join(data_dir, 'sample_survival_data.csv')
+    generate_sample_data(n_samples=500, output_file=output_file)
+
