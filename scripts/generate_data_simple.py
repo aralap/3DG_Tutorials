@@ -69,20 +69,23 @@ def generate_sample_data(n_samples=500, output_file='../data/sample_survival_dat
         censoring_time = random.uniform(365, 1825)
         
         # Determine if event occurs before censoring
-        # Add some randomness to ensure we get both events and censoring
-        if random.random() < 0.3:  # 30% chance of censoring
-            # Censored case: censoring happens before event
-            if survival_time > censoring_time:
-                event = 0
-                survival_time_observed = censoring_time
-            else:
-                # Event still occurs, but we'll force censoring for this case
-                event = 0
-                survival_time_observed = random.uniform(survival_time + 1, 1825)
-        else:
-            # Event case: event occurs before censoring
+        # Use survival_time vs censoring_time to determine event status
+        # This preserves the treatment effect relationships
+        if survival_time <= censoring_time:
+            # Event occurs before censoring
             event = 1
             survival_time_observed = survival_time
+        else:
+            # Censoring occurs before event
+            event = 0
+            survival_time_observed = censoring_time
+            
+        # Force ~30% censoring rate by adjusting some observations
+        # But do this in a way that preserves treatment effect relationships
+        if random.random() < 0.1:  # 10% chance to force additional censoring
+            if event == 1 and survival_time_observed > 365:  # Only censor if survival > 1 year
+                event = 0
+                survival_time_observed = random.uniform(365, min(survival_time_observed, 1825))
         
         # Round survival time
         survival_time_observed = round(survival_time_observed, 2)
