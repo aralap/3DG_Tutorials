@@ -2,6 +2,8 @@
 
 A comprehensive step-by-step tutorial on performing Cox Proportional Hazards Multiple Regression for survival analysis.
 
+**By A. Aptekmann**
+
 ## 📋 Table of Contents
 
 1. [Introduction](#introduction)
