@@ -53,10 +53,25 @@ def generate_sample_data(n_samples=500, output_file='../data/sample_survival_dat
         # Cap maximum survival time at 1825 days (5 years)
         survival_time = min(survival_time, 1825)
         
-        # Generate censoring (30% censoring rate)
+        # Generate censoring (target ~30% censoring rate)
+        # Generate random censoring time between 1 year and 5 years
         censoring_time = random.uniform(365, 1825)
-        event = 1 if survival_time <= censoring_time else 0
-        survival_time_observed = survival_time if event == 1 else censoring_time
+        
+        # Determine if event occurs before censoring
+        # Add some randomness to ensure we get both events and censoring
+        if random.random() < 0.3:  # 30% chance of censoring
+            # Censored case: censoring happens before event
+            if survival_time > censoring_time:
+                event = 0
+                survival_time_observed = censoring_time
+            else:
+                # Event still occurs, but we'll force censoring for this case
+                event = 0
+                survival_time_observed = random.uniform(survival_time + 1, 1825)
+        else:
+            # Event case: event occurs before censoring
+            event = 1
+            survival_time_observed = survival_time
         
         # Round survival time
         survival_time_observed = round(survival_time_observed, 2)
