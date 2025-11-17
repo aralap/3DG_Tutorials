@@ -1,0 +1,34 @@
+variable_name,description,data_type,units,value_range,missing_values,notes
+patient_id,Unique identifier for each patient,Integer,N/A,1-500,No,Primary key
+survival_time,Time from study entry to event or censoring,Float,Days,0-1825,No,Continuous variable representing days
+event,Status indicating whether the event of interest occurred,Binary (0/1),N/A,0 or 1,No,"0 = censored (event did not occur during follow-up), 1 = event occurred"
+age,Patient age at study entry,Integer,Years,30-80,No,Continuous variable
+gender,Biological sex of the patient,Categorical,N/A,Male or Female,No,Two categories
+treatment,Treatment group assignment,Categorical,N/A,"A, B, or C",No,"Three treatment groups: A (standard), B (experimental), C (control)"
+biomarker1,First biomarker measurement,Float,Units/L,20-90,No,"Continuous variable, mean ~50, sd ~15"
+biomarker2,Second biomarker measurement,Float,Units/L,50-200,No,"Continuous variable, mean ~100, sd ~25"
+
+data_collection_protocol,,,,
+Step 1,Patients were recruited from clinical trial database between 2020-2022
+Step 2,Baseline measurements were taken at study entry (day 0)
+Step 3,Follow-up data collected every 3 months for up to 5 years
+Step 4,Events were confirmed by clinical review committee
+Step 5,Censoring occurred when patients were lost to follow-up or reached study end
+
+data_quality_notes,,,,
+- All continuous variables were checked for outliers (±3 SD)
+- Missing data: <1% of values (handled by complete case analysis)
+- Event verification: 100% of events reviewed by independent committee
+- Data validation: Automated checks run weekly during collection period
+
+potential_confounders,,,,
+- Age may confound treatment effects (older patients may have worse outcomes)
+- Biomarker levels may be affected by treatment type
+- Gender distribution should be checked across treatment groups
+
+analysis_considerations,,,,
+- Proportional hazards assumption should be tested for each covariate
+- Interaction terms may be needed (e.g., treatment × age, treatment × biomarker1)
+- Consider stratified analysis if proportional hazards violated
+- Model selection: forward/backward selection or penalized regression may be used
+
