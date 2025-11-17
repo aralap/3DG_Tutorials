@@ -53,21 +53,24 @@ data_clean = data.dropna().copy()
 print(f"✅ Removed missing values: {data.shape[0]} → {data_clean.shape[0]} rows")
 
 # Encode categorical variables
+# For gender, simple binary encoding is fine
 le_gender = LabelEncoder()
-le_treatment = LabelEncoder()
-
 data_clean['gender_encoded'] = le_gender.fit_transform(data_clean['gender'])
-data_clean['treatment_encoded'] = le_treatment.fit_transform(data_clean['treatment'])
+
+# For treatment, create dummy variables with Treatment C as reference
+treatment_dummies = pd.get_dummies(data_clean['treatment'], prefix='treatment', drop_first=False)
+data_clean = pd.concat([data_clean, treatment_dummies], axis=1)
 
 print(f"✅ Encoded categorical variables")
 print(f"   Gender encoding: {dict(zip(le_gender.classes_, le_gender.transform(le_gender.classes_)))}")
-print(f"   Treatment encoding: {dict(zip(le_treatment.classes_, le_treatment.transform(le_treatment.classes_)))}")
+print(f"   Treatment dummy variables created: {list(treatment_dummies.columns)}")
+print(f"   (Treatment C will be the reference group)")
 
-# Prepare Cox data
+# Prepare Cox data - use dummy variables for treatment
 cox_data = data_clean[['survival_time', 'event', 'age', 'gender_encoded', 
-                       'treatment_encoded', 'biomarker1', 'biomarker2']].copy()
+                       'treatment_A', 'treatment_B', 'biomarker1', 'biomarker2']].copy()
 cox_data.columns = ['duration', 'event', 'age', 'gender', 
-                    'treatment', 'biomarker1', 'biomarker2']
+                    'treatment_A', 'treatment_B', 'biomarker1', 'biomarker2']
 
 print(f"✅ Data prepared for Cox regression: {cox_data.shape}")
 
@@ -93,15 +96,24 @@ try:
     
     # Check for expected effects
     print("\n[STEP 4.3] Checking for expected effects:")
-    treatment_hr = hr.get('treatment', None)
+    treatment_a_hr = hr.get('treatment_A', None)
+    treatment_b_hr = hr.get('treatment_B', None)
     age_hr = hr.get('age', None)
     biomarker1_hr = hr.get('biomarker1', None)
     
-    if treatment_hr is not None:
-        if treatment_hr < 1.0:
-            print(f"   ✅ Treatment shows protective effect (HR = {treatment_hr:.4f} < 1.0)")
+    if treatment_a_hr is not None:
+        if treatment_a_hr < 1.0:
+            print(f"   ✅ Treatment A shows protective effect (HR = {treatment_a_hr:.4f} < 1.0 vs. C)")
         else:
-            print(f"   ⚠️  Treatment HR = {treatment_hr:.4f} (expected < 1.0)")
+            print(f"   ⚠️  Treatment A HR = {treatment_a_hr:.4f} (expected < 1.0)")
+    
+    if treatment_b_hr is not None:
+        if treatment_b_hr < 1.0:
+            print(f"   ✅ Treatment B shows protective effect (HR = {treatment_b_hr:.4f} < 1.0 vs. C)")
+            if treatment_a_hr is not None and treatment_b_hr < treatment_a_hr:
+                print(f"   ✅ Treatment B has stronger protective effect than Treatment A (as expected)")
+        else:
+            print(f"   ⚠️  Treatment B HR = {treatment_b_hr:.4f} (expected < 1.0)")
     
     if age_hr is not None:
         if age_hr > 1.0:
@@ -216,7 +228,8 @@ try:
     new_patient = pd.DataFrame({
         'age': [65],
         'gender': [1],
-        'treatment': [1],
+        'treatment_A': [0],  # Not on treatment A
+        'treatment_B': [1],  # On treatment B
         'biomarker1': [55.0],
         'biomarker2': [110.0]
     })
