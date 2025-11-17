@@ -34,18 +34,29 @@ def generate_sample_data(n_samples=500, output_file='../data/sample_survival_dat
         biomarker2 = round(random.gauss(100, 25), 2)
         
         # Generate survival times based on covariates
-        baseline_hazard = 0.02
+        # Stronger effects for better demonstration:
+        # - Treatment B: Strong protective effect (HR ~0.4)
+        # - Treatment A: Moderate protective effect (HR ~0.7)
+        # - Treatment C: Reference group (HR = 1.0)
+        baseline_hazard = 0.015
         if treatment == 'B':
-            treatment_effect = 0.5
+            treatment_effect = 0.35  # Strong protective effect - much better survival
         elif treatment == 'A':
-            treatment_effect = 0.8
+            treatment_effect = 0.65  # Moderate protective effect - better survival
         else:
-            treatment_effect = 1.0
+            treatment_effect = 1.0   # Control/reference group
         
-        age_effect = age / 80
-        biomarker_effect = biomarker1 / 100 if biomarker1 > 0 else 0.5
+        # Age effect: Strong positive association (older = worse survival)
+        # Each 10 years increases hazard by ~40%
+        age_effect = 1 + (age - 50) / 50 * 1.2  # Normalized around age 50
         
-        hazard_rate = baseline_hazard * treatment_effect * (1 + age_effect * 0.5) * (1 + biomarker_effect * 0.3)
+        # Biomarker1 effect: Strong negative association (higher biomarker = better survival)
+        # Higher biomarker1 values are protective
+        biomarker_effect = 1 - (biomarker1 - 50) / 100 * 0.8  # Normalized around 50
+        biomarker_effect = max(0.3, biomarker_effect)  # Prevent negative values
+        
+        # Combine all effects multiplicatively
+        hazard_rate = baseline_hazard * treatment_effect * age_effect * biomarker_effect
         
         # Generate survival time (exponential distribution)
         survival_time = random.expovariate(hazard_rate) if hazard_rate > 0 else 1825
