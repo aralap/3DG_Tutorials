@@ -89,10 +89,13 @@ try:
     print("\n[STEP 4.2] Hazard Ratios:")
     hr = cph.hazard_ratios_
     for cov, value in hr.items():
-        ci = cph.confidence_intervals_.loc[cov]
+        # Get CI for HR (exponentiate log CIs)
+        ci_log = cph.confidence_intervals_.loc[cov]
+        ci_lower_hr = np.exp(ci_log.iloc[0])  # First column (lower bound)
+        ci_upper_hr = np.exp(ci_log.iloc[1])  # Second column (upper bound)
         p_val = cph.summary.loc[cov, 'p']
         sig = "***" if p_val < 0.001 else "**" if p_val < 0.01 else "*" if p_val < 0.05 else ""
-        print(f"   {cov:15s}: HR = {value:.4f} [CI: {ci[0]:.4f}, {ci[1]:.4f}] p={p_val:.4f} {sig}")
+        print(f"   {cov:15s}: HR = {value:.4f} [CI: {ci_lower_hr:.4f}, {ci_upper_hr:.4f}] p={p_val:.4f} {sig}")
     
     # Check for expected effects
     print("\n[STEP 4.3] Checking for expected effects:")
@@ -140,8 +143,11 @@ try:
     fig, ax = plt.subplots(figsize=(10, 7))
     
     hr = cph.hazard_ratios_
-    ci_lower = cph.confidence_intervals_.iloc[:, 0]  # First column (lower bound)
-    ci_upper = cph.confidence_intervals_.iloc[:, 1]  # Second column (upper bound)
+    # IMPORTANT: cph.confidence_intervals_ returns CIs for LOG hazard ratios
+    # We need to exponentiate them to get CIs for actual hazard ratios
+    ci_log = cph.confidence_intervals_.copy()
+    ci_lower = np.exp(ci_log.iloc[:, 0])  # Exponentiate lower bound
+    ci_upper = np.exp(ci_log.iloc[:, 1])  # Exponentiate upper bound
     covariates = hr.index
     
     y_pos = range(len(covariates))
